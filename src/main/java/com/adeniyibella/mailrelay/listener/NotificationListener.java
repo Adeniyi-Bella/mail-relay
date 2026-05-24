@@ -1,7 +1,7 @@
 package com.adeniyibella.mailrelay.listener;
 
 import com.adeniyibella.mailrelay.event.EmailNotificationEvent;
-import com.adeniyibella.mailrelay.service.ResendEmailService;
+import com.adeniyibella.mailrelay.service.MailSender;
 import com.adeniyibella.mailrelay.config.rabbit.NotificationRabbitConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,16 +21,13 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class NotificationListener {
 
-    private final ResendEmailService emailService;
+    private final MailSender mailSender;
 
-    @RabbitListener(
-            queues = NotificationRabbitConfig.NOTIFICATION_QUEUE,
-            containerFactory = "notificationListenerContainerFactory"
-    )
+    @RabbitListener(queues = NotificationRabbitConfig.NOTIFICATION_QUEUE, containerFactory = "notificationListenerContainerFactory")
     public void handle(EmailNotificationEvent event) {
         log.debug("[mail-relay] Received eventType={} to={} correlationId={}",
                 event.eventType(), event.to(), event.correlationId());
 
-        emailService.send(event);
+        mailSender.send(event);
     }
 }

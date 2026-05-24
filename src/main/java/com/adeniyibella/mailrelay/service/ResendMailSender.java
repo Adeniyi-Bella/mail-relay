@@ -7,32 +7,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Calls the Resend API to deliver a transactional email.
- *
- * Retryable errors (5xx, 429) throw RetryableNotificationException so the
- * RabbitMQ retry interceptor can re-deliver with backoff before routing to DLQ.
- *
- * Non-retryable errors (4xx except 429) are logged and swallowed —
- * no point retrying a bad request.
- */
 @Slf4j
-@Service
-public class ResendEmailService {
+public class ResendMailSender implements MailSender {
 
     private static final String RESEND_ENDPOINT = "https://api.resend.com/emails";
 
     private final NotificationProperties properties;
     private final RestTemplate           restTemplate;
 
-    public ResendEmailService(NotificationProperties properties, RestTemplateBuilder builder) {
+    public ResendMailSender(NotificationProperties properties, RestTemplateBuilder builder) {
         this.properties = properties;
         NotificationProperties.Resend resend = properties.resend();
 
@@ -43,6 +32,7 @@ public class ResendEmailService {
         this.restTemplate = builder.requestFactory(() -> factory).build();
     }
 
+    @Override
     public void send(EmailNotificationEvent event) {
         NotificationProperties.Resend resend = properties.resend();
 
