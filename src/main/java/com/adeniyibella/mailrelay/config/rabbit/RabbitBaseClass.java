@@ -8,8 +8,6 @@ import org.springframework.amqp.rabbit.retry.RejectAndDontRequeueRecoverer;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.retry.RetryContext;
-import org.springframework.retry.backoff.*;
 
 /**
  * Shared base class with reusable helpers for:
@@ -59,8 +57,8 @@ public abstract class RabbitBaseClass {
         factory.setMaxConcurrentConsumers(maxConcurrency);
         factory.setAdviceChain(
                 RetryInterceptorBuilder.stateless()
-                        .maxAttempts(3)
-                        .backOffPolicy(new JitterExponentialBackOffPolicy(1_000, 2.0, 8_000, 300))
+                        .maxRetries(3)
+                        .backOffOptions(1_000, 2.0, 8_000)
                         .recoverer(new RejectAndDontRequeueRecoverer())
                         .build());
         return factory;
@@ -86,45 +84,48 @@ public abstract class RabbitBaseClass {
         return factory;
     }
 
-    private static final class JitterExponentialBackOffPolicy implements BackOffPolicy {
+    // private static final class JitterExponentialBackOffPolicy implements BackOffPolicy {
 
-        private final long   initialInterval;
-        private final double multiplier;
-        private final long   maxInterval;
-        private final long   maxJitterMs;
-        private final Sleeper sleeper = new ThreadWaitSleeper();
+    //     private final long   initialInterval;
+    //     private final double multiplier;
+    //     private final long   maxInterval;
+    //     private final long   maxJitterMs;
+    //     private final Sleeper sleeper = new ThreadWaitSleeper();
 
-        JitterExponentialBackOffPolicy(long initialInterval, double multiplier,
-                                       long maxInterval, long maxJitterMs) {
-            this.initialInterval = initialInterval;
-            this.multiplier      = multiplier;
-            this.maxInterval     = maxInterval;
-            this.maxJitterMs     = maxJitterMs;
-        }
+    //     JitterExponentialBackOffPolicy(long initialInterval, double multiplier,
+    //                                    long maxInterval, long maxJitterMs) {
+    //         this.initialInterval = initialInterval;
+    //         this.multiplier      = multiplier;
+    //         this.maxInterval     = maxInterval;
+    //         this.maxJitterMs     = maxJitterMs;
+    //     }
 
-        @Override
-        public BackOffContext start(RetryContext context) {
-            return new Context(initialInterval);
-        }
+    //     @Override
+    //     public BackOffContext start(RetryContext context) {
+    //         return new Context(initialInterval);
+    //     }
 
-        @Override
-        public void backOff(BackOffContext backOffContext) throws BackOffInterruptedException {
-            Context ctx  = (Context) backOffContext;
-            long jitter  = (maxJitterMs <= 0) ? 0
-                    : java.util.concurrent.ThreadLocalRandom.current().nextLong(maxJitterMs + 1);
-            long sleepTime = ctx.currentInterval + jitter;
-            try {
-                sleeper.sleep(sleepTime);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-                throw new BackOffInterruptedException("Thread interrupted during back-off", ex);
-            }
-            ctx.currentInterval = Math.min(maxInterval, (long) (ctx.currentInterval * multiplier));
-        }
+    //     @Override
+    //     public void backOff(BackOffContext backOffContext) throws BackOffInterruptedException {
+    //         Context ctx  = (Context) backOffContext;
+    //         long jitter  = (maxJitterMs <= 0) ? 0
+    //                 : java.util.concurrent.ThreadLocalRandom.current().nextLong(maxJitterMs + 1);
+    //         long sleepTime = ctx.currentInterval + jitter;
+    //         try {
+    //             sleeper.sleep(sleepTime);
+    //         } catch (InterruptedException ex) {
+    //             Thread.currentThread().interrupt();
+    //             throw new BackOffInterruptedException("Thread interrupted during back-off", ex);
+    //         }
+    //         ctx.currentInterval = Math.min(maxInterval, (long) (ctx.currentInterval * multiplier));
+    //     }
 
-        private static final class Context implements BackOffContext {
-            long currentInterval;
-            Context(long currentInterval) { this.currentInterval = currentInterval; }
-        }
-    }
+    //     private static final class Context implements BackOffContext {
+    //         long currentInterval;
+    //         Context(long currentInterval) { this.currentInterval = currentInterval; }
+    //     }
+    // }
+
+
+
 }

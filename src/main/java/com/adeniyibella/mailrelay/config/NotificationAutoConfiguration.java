@@ -13,7 +13,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
@@ -35,10 +34,8 @@ public class NotificationAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(MailSender.class)
-    public MailSender resendMailSender(
-            NotificationProperties properties,
-            RestTemplateBuilder builder) {
-        return new ResendMailSender(properties, builder);
+    public MailSender resendMailSender(NotificationProperties properties) {
+        return new ResendMailSender(properties);
     }
 
     @Bean
