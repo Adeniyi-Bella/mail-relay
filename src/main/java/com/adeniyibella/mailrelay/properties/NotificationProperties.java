@@ -8,10 +8,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Minimal application.yml for a consuming app:
  *
  * mail:
- *   relay:
- *     resend:
- *       api-key: re_xxxxxxxxxxxx
- *       from-email: hello@yourdomain.com
+ * relay:
+ * resend:
+ * api-key: re_xxxxxxxxxxxx
+ * from-email: hello@yourdomain.com
  */
 @ConfigurationProperties(prefix = "mail.relay")
 public record NotificationProperties(
@@ -21,19 +21,23 @@ public record NotificationProperties(
          * useful in local / test environments. Defaults to true.
          */
         boolean enabled,
-
+        String appName,
         Resend resend,
         Rabbit rabbit
 
 ) {
 
     public NotificationProperties {
-        if (resend == null) resend = new Resend(null, null, 5_000, 10_000);
-        if (rabbit == null) rabbit = new Rabbit(2, 5);
+        if (resend == null)
+            resend = new Resend(null, null, 5_000, 10_000);
+        if (rabbit == null)
+            rabbit = new Rabbit(2, 5);
+        if (appName == null || appName.isBlank())
+            appName = "Our App";
     }
 
     public static NotificationProperties defaults() {
-        return new NotificationProperties(true, null, null);
+        return new NotificationProperties(true, null, null, null);
     }
 
     /**
@@ -46,11 +50,12 @@ public record NotificationProperties(
             String apiKey,
             String fromEmail,
             int connectTimeoutMs,
-            int readTimeoutMs
-    ) {
+            int readTimeoutMs) {
         public Resend {
-            if (connectTimeoutMs <= 0) connectTimeoutMs = 5_000;
-            if (readTimeoutMs    <= 0) readTimeoutMs    = 10_000;
+            if (connectTimeoutMs <= 0)
+                connectTimeoutMs = 5_000;
+            if (readTimeoutMs <= 0)
+                readTimeoutMs = 10_000;
         }
     }
 
@@ -60,11 +65,12 @@ public record NotificationProperties(
      */
     public record Rabbit(
             int concurrency,
-            int maxConcurrency
-    ) {
+            int maxConcurrency) {
         public Rabbit {
-            if (concurrency    <= 0) concurrency    = 2;
-            if (maxConcurrency <= 0) maxConcurrency = 5;
+            if (concurrency <= 0)
+                concurrency = 2;
+            if (maxConcurrency <= 0)
+                maxConcurrency = 5;
         }
     }
 }

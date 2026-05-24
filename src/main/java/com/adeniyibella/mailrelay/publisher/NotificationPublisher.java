@@ -19,26 +19,27 @@ import java.util.UUID;
  *
  * Usage in a consuming app:
  *
- *   private final NotificationPublisher notifications;
+ * private final NotificationPublisher notifications;
  *
- *   public void register(RegisterRequest req) {
- *       User user = userRepository.save(new User(req));
- *       notifications.sendWelcomeEmail(user.getId(), user.getEmail(), user.getUsername());
- *   }
+ * public void register(RegisterRequest req) {
+ * User user = userRepository.save(new User(req));
+ * notifications.sendWelcomeEmail(user.getId(), user.getEmail(),
+ * user.getUsername());
+ * }
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class NotificationPublisher {
 
-    private final RabbitTemplate         rabbitTemplate;
+    private final RabbitTemplate rabbitTemplate;
     private final NotificationProperties properties;
 
     /**
      * Enqueues a welcome email for a newly registered user.
      */
     public void sendWelcomeEmail(UUID userId, String email, String username) {
-        publish(EmailNotificationEvent.welcome(userId, email, username));
+        publish(EmailNotificationEvent.welcome(userId, email, username, properties.appName()));
     }
 
     /**
@@ -46,7 +47,8 @@ public class NotificationPublisher {
      * When notifications are disabled the event is silently dropped.
      */
     public void publish(EmailNotificationEvent event) {
-        if (event == null) throw new IllegalArgumentException("event must not be null");
+        if (event == null)
+            throw new IllegalArgumentException("event must not be null");
 
         if (!properties.enabled()) {
             log.warn("[mail-relay] Notifications disabled — dropping eventType={} to={}",
